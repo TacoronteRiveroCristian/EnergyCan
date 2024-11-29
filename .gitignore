@@ -1,8 +1,4 @@
-volumes/influxdb
-**/data/*
-**/log/*
-**/logs/*
-*.ipynb
+chromedriver-win64
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

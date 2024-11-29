@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Activar modo estricto
+set -e  # Detener el script si cualquier comando falla
+set -o pipefail  # Detectar fallos en pipelines
+
 # Descargar e instalar la última versión de Google Chrome
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo dpkg -i google-chrome-stable_current_amd64.deb

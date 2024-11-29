@@ -15,14 +15,16 @@ from unidecode import unidecode
 
 # Configurar opciones de Chrome para Docker
 options = Options()
-options.add_argument("--headless")  # Modo sin cabeza
-options.add_argument(
-    "--no-sandbox"
-)  # Requerido para Docker ya que no existe ventana interactiva de Chrome
+# options.add_argument("--headless")  # Modo sin cabeza
+# options.add_argument(
+#     "--no-sandbox"
+# )  # Requerido para Docker ya que no existe ventana interactiva de Chrome
 
 # Configura el path del ChromeDriver
-service = Service()
-driver = webdriver.Chrome(service=service, options=options)
+service = Service(
+    r"C:\Users\Cristian\GitHub\EnergyCan\chromedriver-win64\chromedriver-win64\chromedriver.exe"
+)
+driver = webdriver.Chrome(service=service)
 
 # URL de la página
 url = "https://demanda.ree.es/visiona/canarias/la_gomera5m/tablas/2024-11-28/1"
@@ -108,3 +110,5 @@ try:
 finally:
     # Cierra el navegador
     driver.quit()
+
+print(dataframes)
