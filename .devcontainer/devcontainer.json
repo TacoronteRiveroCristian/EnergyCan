@@ -1,0 +1,39 @@
+{
+    "name": "EnergyCan Development Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "..",
+        "cacheFrom": "type=local,mode=max,src=${localWorkspaceFolder}/.devcontainer"
+    },
+    "runArgs": [
+        "--name=EnergyCan-devcontainer",
+        "--network=host"
+    ],
+    "workspaceFolder": "/workspaces/EnergyCan",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter",
+                "yzhang.markdown-all-in-one",
+                "Codeium.codeium",
+                "ms-python.black-formatter",
+                "njpwerner.autodocstring",
+                "mhutchie.git-graph",
+                "donjayamanne.githistory",
+                "ms-python.isort",
+                "ms-python.pylint",
+                "ms-python.debugpy",
+                "donjayamanne.python-extension-pack",
+                "KevinRose.vsc-python-indent",
+                "ShaneLiesegang.vscode-simple-icons-rev",
+                "zhuangtongfa.material-theme"
+            ],
+            "settings": {
+                "workbench.colorTheme": "One Dark Pro"
+            }
+        }
+    },
+    "remoteUser": "dev_container"
+}
