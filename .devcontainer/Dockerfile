@@ -16,11 +16,13 @@ WORKDIR ${WORKDIR}
 USER root
 
 # Instalar dependencias generales y Chrome
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y \
     wget \
     curl \
     unzip \
-    xvfb \
+    gnupg \
+    libasound2 \
     libxi6 \
     libgconf-2-4 \
     libxrender1 \
@@ -28,10 +30,12 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libnss3 \
     libatk1.0-0 \
+    libvulkan1 \
     fonts-liberation \
     libappindicator3-1 \
     xdg-utils \
     software-properties-common \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 # Configurar la zona horaria de Canarias
@@ -50,15 +54,18 @@ RUN chown -R appuser:appuser ${WORKDIR} && \
     chmod -R 770 ${WORKDIR} && \
     chmod 600 ${WORKDIR}/.env
 
-# Instalar Chrome y chromedriver
+# Copiar script para Instalar Chrome y chromedriver
+# Al script se le ejecuta el comando dos2unix para eliminar caracteres de Windows
 COPY ./bash/install_chrome_chromedriver.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/install_chrome_chromedriver.sh
+RUN chmod +x /usr/local/bin/install_chrome_chromedriver.sh && \
+    dos2unix /usr/local/bin/install_chrome_chromedriver.sh
 RUN install_chrome_chromedriver.sh
 
 # Cambiar al usuario sin privilegios
 USER appuser
 
 # Instalar dependencias
+COPY requirements.txt requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Comando de arranque
