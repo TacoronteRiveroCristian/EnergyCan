@@ -1,8 +1,17 @@
 """
+Clase para extraer datos de visiona en REE mediante web scraping a traves de las tablas dinamicas que se encuentran
+en la seccion de datos a tiempo real.
+
+El link que se debe de proporcionar debe de tener una estrcutura similña a la siguiente:
+https://demanda.ree.es/visiona/canarias/la_gomera5m/tablas/2024-11-29/1
+
+En este caso, se va a extraer la informacion de la pagina 1 de la fecha 2024-11-29. La pagina 1 correspone a la Demanda,
+la pagina 2 a la Generacion y la pagina 3 a las Emisiones.
 """
 
 from typing import Dict, List, Optional
 
+import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -114,9 +123,9 @@ class ExtractDataVision:
                 cells = row.find_elements(By.CSS_SELECTOR, "td")
                 # Extraer el texto de la primera celda (fecha y hora)
                 row_data = [cells[0].text.strip()]
-                # Convertir las celdas restantes a flotantes o asignar 0 si estan vacias
+                # Convertir las celdas restantes a flotantes o asignar valores no numericos, nan, si estan vacias
                 row_data.extend(
-                    float(cell.text.strip()) if cell.text.strip() else 0
+                    float(cell.text.strip()) if cell.text.strip() else np.nan
                     for cell in cells[1:]
                 )
                 data.append(row_data)  # Agregar la fila procesada a la lista de datos
@@ -125,10 +134,12 @@ class ExtractDataVision:
                 continue
             except ValueError as ve:
                 # Lanzar un error si hay problemas con el formato de los datos
-                raise ValueError(f"Error al procesar una celda de la fila: {ve}")
+                raise ValueError(
+                    f"Error al procesar una celda de la fila: {ve}"
+                ) from ve
             except Exception as e:
                 # Lanzar una excepcion generica para errores inesperados
-                raise Exception(f"Error inesperado al procesar una fila: {e}")
+                raise Exception(f"Error inesperado al procesar una fila: {e}") from e
         return data
 
     def extract_data(self, url: str) -> Dict[str, List]:
@@ -181,6 +192,7 @@ class ExtractDataVision:
         }  # Devolver encabezados y datos extraidos
 
 
+# Ejemplo de uso
 if __name__ == "__main__":
     extractor = ExtractDataVision()
 
@@ -192,6 +204,7 @@ if __name__ == "__main__":
         urls = [
             "https://demanda.ree.es/visiona/canarias/la_gomera5m/tablas/2024-11-29/1",
             "https://demanda.ree.es/visiona/canarias/la_gomera5m/tablas/2024-11-28/2",
+            "https://demanda.ree.es/visiona/canarias/la_gomera5m/tablas/2024-11-28/3",
         ]
 
         for url in urls:

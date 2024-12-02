@@ -7,6 +7,12 @@ from datetime import datetime
 from pathlib import Path
 
 from ctrutils.database.influxdb.InfluxdbOperation import InfluxdbOperation
+from ctrutils.handlers.ErrorHandlerBase import ErrorHandler
+from ctrutils.handlers.LoggingHandlerBase import LoggingHandler
+
+# Instanciar manejador de error y logger
+error_handler = ErrorHandler()
+logging_handler = LoggingHandler()
 
 # Directorio de trabajo
 WORKDIR = Path(os.getenv("WORKDIR"))
