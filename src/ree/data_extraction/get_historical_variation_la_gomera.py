@@ -33,7 +33,7 @@ def process_page(extractor, logger, current_date, n_page, page) -> bool:
         data = build_dataframe(data_dict)
 
         # Guardar DataFrame en InfluxDB
-        INFLUXDB_CLIENT.write_dataframes(
+        INFLUXDB_CLIENT.write_dataframe(
             database=DATABASE_NAME_LA_GOMERA,
             measurement=page,
             data=data,
