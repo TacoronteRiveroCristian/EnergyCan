@@ -18,10 +18,40 @@ from src.ree.conf import (
 from src.ree.utils.data_extraction_funcs import build_dataframe
 from src.ree.utils.ExtractDataVision import ExtractDataVision
 
-# Contador de errores
-error_count = 0
 
-if __name__ == "__main__":
+def process_page(extractor, logger, current_date, n_page, page) -> bool:
+    # Generar url para la fecha actual
+    current_date_str = current_date.strftime("%Y-%m-%d")
+    url = f"{URL_BASE}{current_date_str}/{n_page}"
+
+    logger.info(f"\tExtrayendo datos la direccion: '{url}'...")
+    try:
+        # Extraer datos de la pagina actual
+        data_dict = extractor.extract_data(url)
+
+        # Convertir datos a DataFrame
+        data = build_dataframe(data_dict)
+
+        # Guardar DataFrame en InfluxDB
+        INFLUXDB_CLIENT.write_dataframes(
+            database=DATABASE_NAME_LA_GOMERA,
+            measurement=page,
+            data=data,
+            tags={"fecha": current_date_str},
+        )
+
+        return True
+    except KeyError:
+        warning_msg = f"\t\tError al extraer datos de la Gomera para la fecha '{current_date_str}/{page}'."
+        logger.warning(warning_msg)
+        return False
+    except Exception as e:
+        warning_msg = f"\t\tError al extraer datos de la Gomera para la fecha '{current_date_str}/{page}'. Error: '{e}'"
+        logger.warning(warning_msg)
+        return False
+
+
+def main():
     # Instanciar clase para extrar los datos del visor
     extractor = ExtractDataVision()
     # Configurar logger
@@ -39,50 +69,36 @@ if __name__ == "__main__":
         extractor.start_driver()
 
         # Iniciar bucle para extraer los datos del periodo de interes seleccionado
-        # y a la vez recorrer las 3 paginas: demanda, generacion, emisiones
         current_date = HISTORICAL_DATA_START
         while current_date <= HISTORICAL_DATA_END:
-            # Generar url para la fecha actual
-            for n, page in enumerate(["demanda", "generacion", "emision"], start=1):
-                logger.info(
-                    f"\tExtrayendo datos de la Gomera para la fecha '{current_date}/{n}'..."
-                )
-                url = f"{URL_BASE}{current_date.strftime('%Y-%m-%d')}/{n}"
-
-                # Extraer datos de la tabla dinamica
-                data_dict = extractor.extract_data(url)
-
-                # Construir DataFrame
-                try:
-                    data = build_dataframe(data_dict)
-                except KeyError as e:
-                    error_count += 1
-                    warning_msg = f"No se han obtenido datos de la Gomera para la fecha '{current_date}/{n}'. Error: '{e}'"
-                    error_handler.throw_warning(warning_msg, logger)
-                    # Agregar pausa para evitar que en la siguiente iteracion inicie la extraccion demasiado rapido
+            # Procesar para cada dia, las tres paginas correspondientes
+            for n_page, page in enumerate(
+                ["demanda", "generacion", "emision"], start=1
+            ):
+                # Para cada pagina, intentar al menos una vez la extraccion y como maximo 3 veces mas
+                # en caso de error
+                for i in range(1, 4):
+                    if process_page(extractor, logger, current_date, n_page, page):
+                        break
+                    else:
+                        warning_msg = f"\t\tError al extraer datos de la Gomera para la fecha '{current_date.strftime('%Y-%m-%d')}/{n_page}'. Intento {i} de 3."
+                        logger.warning(warning_msg)
+                        if i == 3:
+                            warning_msg = f"\t\tError al extraer datos de la Gomera para la fecha '{current_date.strftime('%Y-%m-%d')}/{n_page}'."
+                            logger.warning(warning_msg)
+                    # Realizar una pausa entre intentos
                     sleep(0.5)
-                    # Y repetir bucle para intentar obtener los datos o pasar ya a la siguiente fecha si se han originado 3 errores seguidos
-                    if error_count == 3:
-                        current_date += timedelta(days=1)
-                        error_count = 0
-                    continue
 
-                # Guardar DataFrame en InfluxDB
-                INFLUXDB_CLIENT.write_dataframes(
-                    database=DATABASE_NAME_LA_GOMERA,
-                    measurement=page,
-                    data=data,
-                )
-
-            # Incrementar 1 dia para la siguiente iteracion
+            # Avanzar al siguiente dia
             current_date += timedelta(days=1)
-            # Agregar pausa para evitar que en la siguiente iteracion inicie la extraccion demasiado rapido
-            sleep(0.5)
 
-    except Exception as e:
-        error_msg = f"Error al extraer datos de la Gomera para la fecha '{current_date}/{n}'. Error: '{e}'"
-        error_handler.throw_error(error_msg, logger)
-    finally:
         # Detener el WebDriver
         extractor.stop_driver()
         logger.info("Extraccion de datos de la Gomera finalizada.\n")
+    except Exception as e:
+        error_msg = f"Error al extraer datos de la Gomera. Error: '{e}'"
+        error_handler.throw_error(error_msg, logger)
+
+
+if __name__ == "__main__":
+    main()

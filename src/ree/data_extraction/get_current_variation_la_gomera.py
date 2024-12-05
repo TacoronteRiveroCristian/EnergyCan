@@ -5,7 +5,7 @@ Script para obtener los datos historicos del visor de datos en tiempo real de La
 from datetime import datetime
 
 from src.ree.conf import DATABASE_NAME_LA_GOMERA
-from src.ree.conf import GET_VARIATION_LA_GOMERA_LOG as LOG_FILE
+from src.ree.conf import GET_CURRENT_VARIATION_LA_GOMERA_LOG as LOG_FILE
 from src.ree.conf import INFLUXDB_CLIENT, URL_BASE, error_handler, logging_handler
 from src.ree.utils.data_extraction_funcs import build_dataframe
 from src.ree.utils.ExtractDataVision import ExtractDataVision
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
         # Iniciar extraccion para el dia actual
         # y a la vez recorrer las 3 paginas: demanda, generacion, emisiones
-        current_date = datetime.now().strftime('%Y-%m-%d')
+        current_date = datetime.now().strftime("%Y-%m-%d")
 
         # Generar url para la fecha actual
         for n, page in enumerate(["demanda", "generacion", "emision"], start=1):
